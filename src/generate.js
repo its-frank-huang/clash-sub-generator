@@ -37,6 +37,7 @@ export const DEFAULTS = {
   apps: {}, // { id: true/false }：是否单独成组；false 时规则直接指向所属集合
   mainDefault: 'auto', // auto / low / high / <地区 id> / cn / DIRECT
   domesticDefault: 'DIRECT', // DIRECT / cn
+  groupDefaults: {}, // { 应用或集合 id: 默认选择 }，取值同 mainDefault，另可用 main / domestic
   profile: 'client', // client / openclash
   ruleSource: 'github',
   testUrl: 'https://www.gstatic.com/generate_204',
@@ -214,14 +215,23 @@ export function generate(userCfg = {}) {
   const layer1Names = [...regionChoices, ...cnChoice, ...(hasIntl || hasCn ? [G.manual] : [])];
 
   // ---------- 第四层：总模式 ----------
-  const mainDefault = (() => {
-    const d = c.mainDefault;
+  // 默认选择的取值：auto / low / high / <地区 id> / cn / DIRECT；应用和集合另可用 main / domestic
+  const resolveChoice = (d) => {
     if (d === 'DIRECT') return 'DIRECT';
-    if (d === 'cn') return hasCn ? G.cn : 'DIRECT';
+    if (d === 'main') return G.main;
+    if (d === 'domestic') return G.domestic;
+    if (d === 'cn') return hasCn ? G.cn : undefined;
+    if (d === 'auto' && regionChoices.includes(G.auto)) return G.auto;
     if (d === 'low' && regionChoices.includes(G.low)) return G.low;
     if (d === 'high' && regionChoices.includes(G.high(c.multiplier.highFrom))) return G.high(c.multiplier.highFrom);
     const r = REGIONS.find((x) => x.id === d);
     if (r && regionChoices.includes(r.name)) return r.name;
+    return undefined;
+  };
+  const mainDefault = (() => {
+    const d = c.mainDefault;
+    if (d === 'cn' && !hasCn) return 'DIRECT';
+    if (d !== 'main' && d !== 'domestic' && resolveChoice(d)) return resolveChoice(d);
     return regionChoices[0] || 'DIRECT'; // 只有回国节点（人在境外）时，境外流量默认直连
   })();
   const front = (first, list) => [...new Set([first, ...list])];
@@ -254,17 +264,29 @@ export function generate(userCfg = {}) {
   const layer2 = [];
   const ruleTarget = {}; // app id → 组名
   const colTarget = {}; // collection id → 组名
+  // groupDefaults：改某个应用 / 集合的默认选择（例如 Netflix 默认走台湾），选项本身不变
+  const pending = { ...(c.groupDefaults || {}) };
+  const withDefault = (id, name, choices) => {
+    if (!(id in pending)) return choices;
+    const want = pending[id];
+    delete pending[id];
+    const v = resolveChoice(want);
+    if (v && choices.includes(v)) return front(v, choices);
+    warnings.push(`${name} 的默认选择 ${want} 不可用（没有对应节点或不在可选项里），保持 ${choices[0]}。`);
+    return choices;
+  };
   for (const col of enabledCols) {
-    layer3.push({ name: col.name, type: 'select', proxies: choicesFor(col.scope, scopeHead[col.scope]) });
+    layer3.push({ name: col.name, type: 'select', proxies: withDefault(col.id, col.name, choicesFor(col.scope, scopeHead[col.scope])) });
     colTarget[col.id] = col.name;
     for (const app of col.apps) {
       const own = app.id in (c.apps || {}) ? c.apps[app.id] : app.own !== false;
       if (own && col.scope !== 'reject') {
-        layer2.push({ name: app.name, type: 'select', proxies: choicesFor(col.scope, col.name) });
+        layer2.push({ name: app.name, type: 'select', proxies: withDefault(app.id, app.name, choicesFor(col.scope, col.name)) });
         ruleTarget[app.id] = app.name;
       } else ruleTarget[app.id] = col.name;
     }
   }
+  for (const id of Object.keys(pending)) warnings.push(`groupDefaults 里的 ${id} 不是已启用、单独成组的应用或集合，已忽略。`);
 
   // ---------- 规则 ----------
   const providers = {};

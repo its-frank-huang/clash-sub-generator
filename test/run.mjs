@@ -121,6 +121,21 @@ test('关闭应用独立分组后规则指向集合', () => {
   assert.ok(config.rules.includes('RULE-SET,netflix,🌍 国外媒体'));
 });
 
+test('groupDefaults 改应用 / 集合的默认选择，不可用时保持原样并提示', () => {
+  const TW = VLESS.replace('#%F0%9F%87%BA%F0%9F%87%B8%20LA', '#台湾');
+  const out = generate({
+    nodes: { intl: `${VLESS}\n${TW}`, cn: CN_VLESS },
+    groupDefaults: { netflix: 'tw', 'cn-media': 'cn', youtube: 'jp', nope: 'us' },
+  });
+  checkConsistency(out.config);
+  const g = Object.fromEntries(out.config['proxy-groups'].map((x) => [x.name, x]));
+  assert.equal(g['🎬 Netflix'].proxies[0], '🇹🇼 台湾');
+  assert.ok(g['🎬 Netflix'].proxies.includes('🌍 国外媒体'), '原默认仍可选');
+  assert.equal(g['🏮 国内媒体'].proxies[0], '🇨🇳 回国');
+  assert.equal(g['▶️ YouTube'].proxies[0], '🌍 国外媒体', '没有日本节点 → 保持');
+  assert.equal(out.warnings.length, 2);
+});
+
 test('规则顺序：YouTube / Gemini 在 Google 前，GitHub 在 Microsoft 前，大类兜底在最后', () => {
   const { config } = generate(SCENARIOS.只有机场);
   const idx = (s) => config.rules.findIndex((r) => r.startsWith(`RULE-SET,${s},`));

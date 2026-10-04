@@ -92,6 +92,7 @@ node cli.mjs -c config.json -o config.yaml
 | `apps` | `{ 应用id: true/false }`：是否单独成组；`false` 时规则直接走所属集合 | 见 `src/catalog.js` |
 | `mainDefault` | 🚀 总模式默认：`auto` `low` `high` 地区 id `cn` `DIRECT` | `auto` |
 | `domesticDefault` | 🏮 国内总模式默认：`DIRECT` / `cn` | `DIRECT` |
+| `groupDefaults` | 改某个应用或集合的默认选择，如 `{ "netflix": "tw", "cn-media": "cn" }`；取值同 `mainDefault`，另可用 `main` / `domestic`；不可用时保持原默认并提示。只在 JSON 设置文件里（网页导入导出会保留） | `{}` |
 | `profile` | `client`（客户端）/ `openclash`（路由器端口和监听） | `client` |
 | `ruleSource` | `github`（经总模式下载）/ `jsdelivr`（直连，大陆可用） | `github` |
 | `mlkem` | Reality 节点加 `support-x25519mlkem768: true` | `true` |
