@@ -1,5 +1,7 @@
 # Clash 订阅生成器
 
+**👉 在线使用：<https://its-frank-huang.github.io/clash-sub-generator/>**
+
 把**多个机场订阅、自建服务器订阅（3x-ui 等）和单节点链接**合成为一份 Clash Meta / mihomo 配置：四层分组、主流媒体和 AI 分流、出国和**回国**节点都有。
 
 - **网页版**：订阅地址和节点只在你的浏览器里处理，不会上传。
@@ -46,7 +48,7 @@
 
 ### 网页版
 
-部署到 GitHub Pages：Fork 本仓库 → Settings → Pages → Source 选 **GitHub Actions** → 推送一次 `main`，之后打开 `https://<你的用户名>.github.io/<仓库名>/`。
+直接用上面的在线地址即可。想部署自己的一份：Fork 本仓库 → Settings → Pages → Source 选 **Deploy from a branch**，分支选默认分支、目录选 `/ (root)` → 保存，稍等一两分钟后打开 `https://<你的用户名>.github.io/<仓库名>/`。
 
 本地使用（直接双击 `index.html` 打不开，浏览器不允许 `file://` 加载 ES 模块）：
 
