@@ -1,0 +1,14 @@
+{
+  "name": "clash-sub-generator",
+  "version": "1.0.0",
+  "description": "把多个机场 / 自建服务器订阅和节点链接合成为四层分组的 Clash Meta (mihomo) 配置，支持回国节点和主流媒体分流",
+  "type": "module",
+  "license": "MIT",
+  "bin": { "clash-sub-generator": "cli.mjs" },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node test/run.mjs",
+    "gen": "node cli.mjs -c config.json -o config.yaml"
+  },
+  "engines": { "node": ">=18" }
+}

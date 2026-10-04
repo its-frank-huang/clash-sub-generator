@@ -1,0 +1,22 @@
+{
+  "subscriptions": [
+    { "name": "机场A", "url": "https://example.com/api/v1/client/subscribe?token=REPLACE_ME", "role": "intl" },
+    { "name": "自建", "url": "https://my-3x-ui.example.com:2096/sub/REPLACE_ME", "role": "intl" },
+    { "name": "回国", "url": "https://cn-server.example.com:2096/sub/REPLACE_ME", "role": "cn" }
+  ],
+  "nodes": {
+    "intl": "vless://00000000-0000-0000-0000-000000000000@203.0.113.10:443?type=tcp&security=reality&pbk=REPLACE_ME&fp=chrome&sni=www.intel.com&sid=abcd&flow=xtls-rprx-vision#🇺🇸 LA 自建",
+    "cn": ""
+  },
+  "regions": ["hk", "tw", "jp", "sg", "us", "kr", "gb", "de"],
+  "otherRegion": true,
+  "multiplier": { "lowBelow": 2, "highFrom": 3, "regionAutoExcludeHigh": true },
+  "cnFromAirports": false,
+  "collections": { "ads": false },
+  "apps": { "netflix": true, "dazn": false },
+  "mainDefault": "auto",
+  "domesticDefault": "DIRECT",
+  "profile": "client",
+  "ruleSource": "github",
+  "customRules": "DOMAIN-SUFFIX,example.org,🚀 总模式"
+}

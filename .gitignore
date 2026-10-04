@@ -1,0 +1,7 @@
+# 含订阅地址 / 节点凭据，绝不提交
+config.json
+config.yaml
+*.local.json
+*.local.yaml
+clash-sub-generator.json
+node_modules/

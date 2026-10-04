@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clash 订阅生成器</title>
+    <meta name="description" content="在浏览器本地把机场订阅、自建服务器订阅和节点链接合成为分层分组的 Clash Meta / mihomo 配置。" />
+    <link rel="stylesheet" href="src/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1>Clash 订阅生成器</h1>
+        <p class="sub">多订阅 · 回国节点 · 四层分组（总模式 → 应用集合 → 应用 → 地区）· mihomo / Clash Meta</p>
+      </div>
+      <p class="privacy">🔒 全部在浏览器本地生成，订阅地址和节点信息不会上传到任何地方。</p>
+    </header>
+
+    <main class="layout">
+      <form id="form" class="settings" autocomplete="off" onsubmit="return false">
+        <section class="card">
+          <h2>订阅<span class="hint">机场订阅、3x-ui / sing-box 等服务器订阅都填这里，可以填多个</span></h2>
+          <div id="subs"></div>
+          <button type="button" id="add-sub" class="ghost">＋ 添加订阅</button>
+        </section>
+
+        <section class="card">
+          <h2>单节点链接<span class="hint">每行一个：vless / vmess / trojan / ss / hysteria2 / tuic / anytls / socks5</span></h2>
+          <div class="two">
+            <label class="field">
+              <span>出国节点</span>
+              <textarea id="nodes-intl" rows="4" spellcheck="false" placeholder="vless://…#🇺🇸 LA 自建"></textarea>
+              <small id="nodes-intl-status" class="status"></small>
+            </label>
+            <label class="field">
+              <span>回国节点</span>
+              <textarea id="nodes-cn" rows="4" spellcheck="false" placeholder="vless://…#阿里云广州"></textarea>
+              <small id="nodes-cn-status" class="status"></small>
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><span class="layer">第一层</span>地区与节点</h2>
+          <p class="explain">每个地区是一个手动选择组，第一项是该地区的自动测速；点具体节点就固定用它。另有 ♻️ 全部自动、⚡ 1x 自动、💎 高倍率自动、👆 手动选择（全部节点）。</p>
+          <div id="regions" class="chips"></div>
+          <label class="check"><input type="checkbox" id="other-region" /> 🌐 其他地区（不属于以上地区的节点）</label>
+          <div class="row">
+            <label class="inline">⚡ 1x 组排除倍率 ≥ <input type="number" id="low-below" min="2" max="9" /></label>
+            <label class="inline">💎 高倍率组只要倍率 ≥ <input type="number" id="high-from" min="2" max="9" /></label>
+          </div>
+          <label class="check"><input type="checkbox" id="region-exclude-high" /> 各地区的自动测速不选高倍率节点</label>
+          <label class="check"><input type="checkbox" id="cn-from-airports" /> 从机场订阅里识别回国节点（按下面的关键词）</label>
+          <details>
+            <summary>高级：筛选关键词（正则）</summary>
+            <label class="field"><span>回国节点关键词</span><input type="text" id="cn-filter" spellcheck="false" /></label>
+            <label class="field"><span>剔除的信息节点（剩余流量、到期时间等）</span><input type="text" id="info-filter" spellcheck="false" /></label>
+          </details>
+        </section>
+
+        <section class="card">
+          <h2><span class="layer">第二、三层</span>应用与应用集合</h2>
+          <p class="explain">勾选集合 = 生成这个集合组和它的分流规则。集合里亮起的应用会单独成组（默认跟随集合），没亮的应用规则直接走集合。</p>
+          <div id="collections"></div>
+        </section>
+
+        <section class="card">
+          <h2><span class="layer">第四层</span>总模式默认值</h2>
+          <div class="two">
+            <label class="field"><span>🚀 总模式（境外网站默认走）</span><select id="main-default"></select></label>
+            <label class="field">
+              <span>🏮 国内总模式（国内网站 / 国内媒体默认走）</span>
+              <select id="domestic-default">
+                <option value="DIRECT">DIRECT 直连（人在大陆）</option>
+                <option value="cn">🇨🇳 回国（人在境外）</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>输出设置</h2>
+          <div class="two">
+            <label class="field">
+              <span>用在哪里</span>
+              <select id="profile">
+                <option value="client">电脑 / 手机客户端（Clash Verge Rev、Mihomo Party、FlClash…）</option>
+                <option value="openclash">路由器 OpenClash</option>
+              </select>
+            </label>
+            <label class="field"><span>规则集下载源</span><select id="rule-source"></select></label>
+            <label class="field"><span>混合代理端口（客户端）</span><input type="number" id="mixed-port" /></label>
+            <label class="field"><span>控制面板密码 secret（可留空）</span><input type="text" id="secret" spellcheck="false" /></label>
+          </div>
+          <label class="check"><input type="checkbox" id="mlkem" /> Reality 节点加 <code>support-x25519mlkem768: true</code>（Xray 新版服务端需要，缺了会超时）</label>
+          <label class="field">
+            <span>自定义规则（放在最前面，每行一条，例如 <code>DOMAIN-SUFFIX,example.com,🚀 总模式</code>）</span>
+            <textarea id="custom-rules" rows="3" spellcheck="false"></textarea>
+          </label>
+          <label class="check"><input type="checkbox" id="remember" /> 在本浏览器记住设置（含订阅地址，只存在这台设备）</label>
+        </section>
+      </form>
+
+      <aside class="output">
+        <div class="out-head">
+          <div class="tabs" role="tablist">
+            <button type="button" role="tab" data-tab="tree" class="tab active">分组结构</button>
+            <button type="button" role="tab" data-tab="yaml" class="tab">YAML</button>
+          </div>
+          <div class="actions">
+            <button type="button" id="copy">复制</button>
+            <button type="button" id="download" class="primary">下载 config.yaml</button>
+          </div>
+        </div>
+        <p id="stats" class="stats"></p>
+        <ul id="warnings" class="warnings"></ul>
+        <div id="tree" class="tree"></div>
+        <pre id="yaml" class="yaml" hidden></pre>
+        <div class="io">
+          <button type="button" id="export" class="ghost">导出设置 JSON</button>
+          <label class="ghost file">导入设置 JSON<input type="file" id="import" accept=".json,application/json" hidden /></label>
+          <button type="button" id="reset" class="ghost">恢复默认</button>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
